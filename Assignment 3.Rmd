@@ -1,0 +1,39 @@
+---
+title: "Incarceration Trends"
+author: "Evan Waara"
+date: '2022-05-20'
+output: html_document
+---
+
+## Introduction
+
+The data I am analyzing shows incarceration data for each county over time. I have chosen to analyze specifically the differences of black prison population rates compared to white rates since 2010 for each state. I am looking to illustrate how the criminal justice system is arresting black people at a disproportionately high rate. The original data set contains over 15,000 rows and 121 columns. to narrow the data down I decided to start tracking in 2010. I also narrowed it down to the columns state, year, average rate of prisoners that are Black, and average rate of prisoners that are White. This left me with 459 rows and 4 columns.
+
+## Summary of the dataset
+The average Black prison population rate is 2290.35 per 100,000. The average White prison population rate is 477.77 per 100,000. The state with the highest Black prison rate on average since 2010 is Wisconsin with 4119.796 per 100,000. The state with the highest White prison population rate since 2010 is Oklahoma with 931.4342 per 100,000. The state with the highest discrepancy between black and white prison population rate since 2010 is Wisconsin with a difference of 3748.883 per 100,000.
+
+```{r, echo=FALSE}
+library(tidyverse)
+incarceration_data <- read.csv(url('https://raw.githubusercontent.com/vera-institute/incarceration-trends/master/incarceration_trends.csv'))
+
+west_black_rate <- incarceration_data %>%
+  filter( region == 'West') %>%
+  filter( year >= 2010) %>%
+  filter( year <= 2016) %>%
+  filter( state != 'AK') %>%
+  filter( state != 'HI') %>% 
+  #Oregon is incomplete
+  filter (state != 'OR') %>%
+  select(state,year,black_prison_pop_rate) %>%
+  group_by(state, year) %>%
+  summarise(black_pop_rate_mean = mean(black_prison_pop_rate,na.rm=TRUE))
+  
+scatter <- west_black_rate %>%
+  ggplot( aes(x=year,y=black_pop_rate_mean,color=state)) +
+  xlab('Year') +
+  ylab('Black prison rate per 100,000') +
+  ggtitle("Black Prison Rate for West Coast") +
+  geom_line() +
+  geom_point()
+print(scatter)
+```
