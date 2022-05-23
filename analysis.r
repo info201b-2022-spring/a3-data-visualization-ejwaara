@@ -65,12 +65,79 @@ west_black_rate <- incarceration_data %>%
   select(state,year,black_prison_pop_rate) %>%
   group_by(state, year) %>%
   summarise(black_pop_rate_mean = mean(black_prison_pop_rate,na.rm=TRUE))
-  
+
+#line graph tracking black prison rate for western states.  
 scatter <- west_black_rate %>%
   ggplot( aes(x=year,y=black_pop_rate_mean,color=state)) +
   xlab('Year') +
   ylab('Black prison rate per 100,000') +
-  ggtitle("Black Prison Rate for West Coast") +
+  ggtitle("Black Prison Rate for Western States") +
   geom_line() +
   geom_point()
-print(scatter)
+
+#compare white prison rates to black prison rates nationally since 2010
+national_rates <- incarceration_data %>%
+  filter(year >= 2010) %>%
+  filter(year <= 2016) %>%
+  group_by(year) %>%
+  summarise( Black = mean(
+    black_prison_pop_rate,na.rm=TRUE), White = mean(
+      white_prison_pop_rate,na.rm=TRUE)) 
+
+#make long dataset
+long_national_rates <- gather(
+  national_rates, race, pop_rate, Black, White)
+
+
+#plot the trends
+plot_nat_rate <- long_national_rates %>%
+  ggplot( aes(x=year,y=pop_rate,color=race)) +
+  xlab('Year') +
+  ylab('Prison rate per 100,000') +
+  ggtitle('Average National Prison Rate') +
+  geom_line() +
+  geom_point()
+
+
+#Make map showing difference between black prison rate and white prison rate average.
+
+
+df_map <- select(discrepancy_black_white, state, difference) %>%
+  filter(state != 'DC') %>%
+  mutate(region = setNames(state.name, state.abb)[df_map$state])
+df_map$region <- tolower(df_map$region)
+
+#borrowed heavily from the textbook
+state_shape <- map_data("state") %>%
+  left_join( df_map,by='region')
+map_diff <- ggplot(state_shape) +
+  geom_polygon(
+    mapping = aes(x = long, y = lat, group = group, fill = difference),
+    color = "white", # show state outlines
+    size = .1        # thinly stroked
+  ) +
+  coord_map() + # use a map-based coordinate system
+  scale_fill_continuous(low = "#132B43", high = "Red") +
+  labs(fill = "Difference between black and white") +
+  theme(
+    axis.line = element_blank(),
+    axis.text = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title = element_blank(),
+    plot.background = element_blank(),
+    panel.grid.major = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.border = element_blank()
+  )
+print(map_diff)
+
+
+
+
+
+
+
+
+
+
+
